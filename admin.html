@@ -1,0 +1,739 @@
+﻿<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>YouCI — Administration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #0c0c0f;
+        --panel: #17171d;
+        --field: #101014;
+        --line: #30303a;
+        --text: #f8f7f4;
+        --muted: #a8a8b1;
+        --red: #f42d37;
+        --orange: #ffb000;
+        --danger: #ffabb0;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 15px "DM Sans", sans-serif;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px clamp(18px, 5vw, 70px);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
+        font: 800 25px "Syne", sans-serif;
+      }
+
+      .brand b {
+        color: var(--red);
+      }
+
+      .tag {
+        margin-left: 7px;
+        font-size: 11px;
+        letter-spacing: 1px;
+        color: var(--orange);
+      }
+
+      .secondary,
+      .primary,
+      .edit,
+      .delete {
+        border: 0;
+        border-radius: 9px;
+        padding: 11px 14px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .primary {
+        background: var(--red);
+      }
+
+      .secondary,
+      .edit {
+        background: #292931;
+      }
+
+      .delete {
+        background: #491d23;
+        color: var(--danger);
+      }
+
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 32px 18px 60px;
+      }
+
+      .intro h1 {
+        margin: 0 0 8px;
+        font: 800 clamp(29px, 5vw, 47px) "Syne", sans-serif;
+        letter-spacing: -1.8px;
+      }
+
+      .intro p {
+        margin: 0 0 27px;
+        color: var(--muted);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.78fr);
+        gap: 24px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 23px;
+      }
+
+      .panel h2 {
+        margin: 0 0 19px;
+        font: 800 20px "Syne", sans-serif;
+      }
+
+      .auth {
+        max-width: 520px;
+        margin: 40px auto 0;
+      }
+
+      .auth p {
+        color: var(--muted);
+        margin: 0 0 18px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 15px;
+      }
+
+      .wide {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        color: #d0d0d8;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      input,
+      select {
+        width: 100%;
+        min-height: 45px;
+        padding: 10px 12px;
+        background: var(--field);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        color: var(--text);
+        outline: 0;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--red);
+      }
+
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 23px;
+      }
+
+      .preview {
+        overflow: hidden;
+        padding: 0;
+      }
+
+      .preview-empty {
+        padding: 52px 22px;
+        text-align: center;
+        color: var(--muted);
+      }
+
+      .preview img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        background: #23232b;
+      }
+
+      .preview-text {
+        padding: 17px;
+      }
+
+      .preview-text h3 {
+        margin: 0 0 5px;
+        font-size: 17px;
+      }
+
+      .preview-text p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .list {
+        margin-top: 27px;
+      }
+
+      .list h2 {
+        margin: 0 0 15px;
+        font: 800 22px "Syne", sans-serif;
+      }
+
+      .empty {
+        padding: 18px 14px;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+        color: var(--muted);
+      }
+
+      .clip {
+        display: grid;
+        grid-template-columns: 120px 1fr auto;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .clip:last-child {
+        border-bottom: 0;
+      }
+
+      .clip img {
+        width: 100%;
+        height: 72px;
+        object-fit: cover;
+        border-radius: 10px;
+        background: #23232b;
+      }
+
+      .clip h3 {
+        margin: 0 0 5px;
+        font-size: 16px;
+      }
+
+      .clip p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .clip-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 26px;
+        transform: translateX(-50%) translateY(18px);
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(248, 247, 244, 0.95);
+        color: #101014;
+        font-weight: 700;
+        opacity: 0;
+        pointer-events: none;
+        transition: 0.25s ease;
+        z-index: 80;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      @media (max-width: 800px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .clip {
+          grid-template-columns: 92px 1fr;
+        }
+
+        .clip-actions {
+          grid-column: 1 / -1;
+          justify-content: flex-end;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="bar">
+      <div class="brand">You<b>CI</b><span class="tag">ADMIN</span></div>
+      <button id="logout" class="secondary hidden" type="button">Déconnexion</button>
+    </header>
+
+    <main class="wrap">
+      <section id="loginView" class="panel auth">
+        <h2>Connexion administrateur</h2>
+        <p>Connectez-vous pour gérer les clips visibles sur YouCI.</p>
+
+        <form id="loginForm">
+          <label for="email">E-mail</label>
+          <input id="email" type="email" required autocomplete="email" />
+
+          <label for="password" style="margin-top: 14px;">Mot de passe</label>
+          <input id="password" type="password" required autocomplete="current-password" />
+
+          <div class="actions">
+            <button class="primary" type="submit">Se connecter</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="adminView" class="hidden">
+        <section class="intro">
+          <h1>Gérer les clips</h1>
+          <p>Les modifications sont publiées sur le site pour tous les visiteurs.</p>
+        </section>
+
+        <div class="layout">
+          <form class="panel" id="clipForm">
+            <h2 id="formTitle">Nouveau clip</h2>
+
+            <div class="form-grid">
+              <div class="wide">
+                <label for="title">Titre du clip *</label>
+                <input id="title" required />
+              </div>
+
+              <div>
+                <label for="artist">Artiste *</label>
+                <input id="artist" required />
+              </div>
+
+              <div>
+                <label for="genre">Genre *</label>
+                <select id="genre">
+                  <option value="Rap">Rap</option>
+                  <option value="Afropop">Afropop</option>
+                  <option value="Coupé-décalé">Coupé-décalé</option>
+                  <option value="Gospel">Gospel</option>
+                  <option value="Zouglou">Zouglou</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
+
+              <div class="wide" id="customGenreWrap" hidden>
+                <label for="customGenre">Genre personnalisé</label>
+                <input id="customGenre" />
+              </div>
+
+              <div class="wide">
+                <label for="youtube">Lien YouTube *</label>
+                <input id="youtube" type="url" required placeholder="https://www.youtube.com/watch?v=…" />
+              </div>
+
+              <div>
+                <label for="spotify">Lien Spotify</label>
+                <input id="spotify" type="url" placeholder="https://open.spotify.com/track/…" />
+              </div>
+
+              <div>
+                <label for="duration">Durée</label>
+                <input id="duration" placeholder="Ex. 3:42" />
+              </div>
+            </div>
+
+            <div class="actions">
+              <button type="button" id="reset" class="secondary">Annuler</button>
+              <button type="submit" class="primary" id="submitBtn">Enregistrer</button>
+            </div>
+          </form>
+
+          <aside class="panel preview" aria-live="polite">
+            <div id="preview"></div>
+          </aside>
+        </div>
+
+        <section class="list">
+          <h2>Catalogue</h2>
+          <div id="clipList"></div>
+        </section>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script>
+      const db = window.youciSupabase;
+      const state = {
+        clips: [],
+        editingId: null,
+        adminLoggedIn: false
+      };
+
+      const elements = {
+        loginView: document.getElementById('loginView'),
+        adminView: document.getElementById('adminView'),
+        loginForm: document.getElementById('loginForm'),
+        logoutBtn: document.getElementById('logout'),
+        clipForm: document.getElementById('clipForm'),
+        resetBtn: document.getElementById('reset'),
+        preview: document.getElementById('preview'),
+        clipList: document.getElementById('clipList'),
+        toast: document.getElementById('toast'),
+        formTitle: document.getElementById('formTitle'),
+        title: document.getElementById('title'),
+        artist: document.getElementById('artist'),
+        genre: document.getElementById('genre'),
+        customGenre: document.getElementById('customGenre'),
+        customGenreWrap: document.getElementById('customGenreWrap'),
+        youtube: document.getElementById('youtube'),
+        spotify: document.getElementById('spotify'),
+        duration: document.getElementById('duration')
+      };
+
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        })[char]);
+      }
+
+      function showToast(message) {
+        elements.toast.textContent = message;
+        elements.toast.classList.add('show');
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => elements.toast.classList.remove('show'), 2600);
+      }
+
+      function getYoutubeId(url) {
+        if (!url) return null;
+        const match = url.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/i);
+        return match ? match[1] : null;
+      }
+
+      function getThumbnail(id) {
+        return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+      }
+
+      function getSelectedGenre() {
+        const selected = elements.genre.value;
+        if (selected === 'Autre') {
+          return elements.customGenre.value.trim() || 'Autre';
+        }
+        return selected;
+      }
+
+      function renderPreview() {
+        const id = getYoutubeId(elements.youtube.value.trim());
+
+        if (!id) {
+          elements.preview.innerHTML = '<div class="preview-empty">Collez un lien YouTube valide pour voir l’aperçu.</div>';
+          return;
+        }
+
+        const title = elements.title.value.trim() || 'Titre du clip';
+        const artist = elements.artist.value.trim() || 'Artiste';
+        const genre = getSelectedGenre();
+
+        elements.preview.innerHTML = `
+          <img src="${getThumbnail(id)}" alt="Aperçu du clip" />
+          <div class="preview-text">
+            <h3>${escapeHtml(title)}</h3>
+            <p>${escapeHtml(artist)} · ${escapeHtml(genre)}</p>
+          </div>
+        `;
+      }
+
+      function resetForm() {
+        state.editingId = null;
+        elements.clipForm.reset();
+        elements.genre.value = 'Rap';
+        elements.customGenre.value = '';
+        elements.customGenreWrap.hidden = true;
+        elements.formTitle.textContent = 'Nouveau clip';
+        document.getElementById('submitBtn').textContent = 'Enregistrer';
+        renderPreview();
+      }
+
+      function renderList() {
+        if (!state.clips.length) {
+          elements.clipList.innerHTML = '<div class="empty">Aucun clip dans le catalogue.</div>';
+          return;
+        }
+
+        elements.clipList.innerHTML = '';
+
+        state.clips.forEach((clip) => {
+          const item = document.createElement('article');
+          item.className = 'clip';
+          item.innerHTML = `
+            <img src="${getThumbnail(clip.youtube_id)}" alt="${escapeHtml(clip.title)}" />
+            <div>
+              <h3>${escapeHtml(clip.title)}</h3>
+              <p>${escapeHtml(clip.artist)} · ${escapeHtml(clip.genre)}${clip.spotify_url ? ' · Spotify ✓' : ''}</p>
+            </div>
+            <div class="clip-actions">
+              <button type="button" class="edit" data-edit="${clip.id}">Modifier</button>
+              <button type="button" class="delete" data-delete="${clip.id}">Supprimer</button>
+            </div>
+          `;
+          elements.clipList.appendChild(item);
+        });
+      }
+
+      async function loadClips() {
+        if (!db || !db.from) {
+          showToast('Supabase non disponible');
+          return;
+        }
+
+        const { data, error } = await db.from('clips').select('*').order('created_at', { ascending: false });
+
+        if (error) {
+          console.error(error);
+          showToast(`Erreur : ${error.message}`);
+          return;
+        }
+
+        state.clips = data || [];
+        renderList();
+      }
+
+      function fillForm(clip) {
+        state.editingId = clip.id;
+        elements.formTitle.textContent = 'Modifier un clip';
+        document.getElementById('submitBtn').textContent = 'Mettre à jour';
+
+        elements.title.value = clip.title || '';
+        elements.artist.value = clip.artist || '';
+        const hasCustomGenre = !['Rap', 'Afropop', 'Coupé-décalé', 'Gospel', 'Zouglou', 'Autre'].includes(clip.genre);
+        elements.genre.value = hasCustomGenre ? 'Autre' : (clip.genre || 'Rap');
+        elements.customGenre.value = hasCustomGenre ? clip.genre : '';
+        elements.customGenreWrap.hidden = !hasCustomGenre;
+        elements.youtube.value = clip.youtube_id ? `https://www.youtube.com/watch?v=${clip.youtube_id}` : '';
+        elements.spotify.value = clip.spotify_url || '';
+        elements.duration.value = clip.duration || '';
+        renderPreview();
+      }
+
+      function setAuthState(loggedIn) {
+        state.adminLoggedIn = loggedIn;
+        elements.loginView.classList.toggle('hidden', loggedIn);
+        elements.adminView.classList.toggle('hidden', !loggedIn);
+        elements.logoutBtn.classList.toggle('hidden', !loggedIn);
+      }
+
+      async function syncAuthState() {
+        if (!db || !db.auth || typeof db.auth.getSession !== 'function') {
+          setAuthState(false);
+          return;
+        }
+
+        const { data: { session }, error } = await db.auth.getSession();
+
+        if (error) {
+          console.error(error);
+          setAuthState(false);
+          return;
+        }
+
+        setAuthState(Boolean(session));
+
+        if (session) {
+          await loadClips();
+        }
+      }
+
+      async function handleLogin(event) {
+        event.preventDefault();
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!email || !password) {
+          showToast('Renseignez votre email et mot de passe');
+          return;
+        }
+
+        try {
+          const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+          if (error) throw error;
+
+          setAuthState(Boolean(data?.session));
+          showToast('Connexion réussie');
+          await loadClips();
+        } catch (error) {
+          console.error(error);
+          showToast(error.message || 'Erreur de connexion');
+        }
+      }
+
+      async function handleLogout() {
+        if (!db || !db.auth || typeof db.auth.signOut !== 'function') {
+          showToast('Supabase non disponible');
+          return;
+        }
+
+        const { error } = await db.auth.signOut();
+
+        if (error) {
+          console.error(error);
+          showToast('Déconnexion impossible');
+          return;
+        }
+
+        setAuthState(false);
+        document.getElementById('loginForm').reset();
+        showToast('Déconnecté');
+      }
+
+      async function saveClip(event) {
+        event.preventDefault();
+
+        if (!state.adminLoggedIn) {
+          showToast('Connectez-vous à Supabase pour enregistrer');
+          return;
+        }
+
+        const youtubeId = getYoutubeId(elements.youtube.value.trim());
+        const payload = {
+          title: elements.title.value.trim(),
+          artist: elements.artist.value.trim(),
+          genre: getSelectedGenre(),
+          youtube_id: youtubeId,
+          spotify_url: elements.spotify.value.trim() || null,
+          duration: elements.duration.value.trim() || null
+        };
+
+        if (!payload.title || !payload.artist || !payload.youtube_id) {
+          showToast('Renseignez le titre, l’artiste et le lien YouTube');
+          return;
+        }
+
+        if (state.clips.some((clip) => clip.youtube_id === payload.youtube_id && clip.id !== state.editingId)) {
+          showToast('Ce clip existe déjà dans le catalogue');
+          return;
+        }
+
+        try {
+          const { data: sessionData, error: sessionError } = await db.auth.getSession();
+
+          if (sessionError || !sessionData?.session) {
+            throw new Error('Session Supabase introuvable. Reconnectez-vous à l’admin.');
+          }
+
+          if (state.editingId) {
+            const { error } = await db.from('clips').update(payload).eq('id', state.editingId);
+            if (error) throw error;
+            showToast('Clip modifié');
+          } else {
+            const { error } = await db.from('clips').insert([payload]);
+            if (error) throw error;
+            showToast('Clip ajouté');
+          }
+
+          resetForm();
+          await loadClips();
+        } catch (error) {
+          console.error(error);
+          showToast(error.message || 'Erreur lors de l’enregistrement');
+        }
+      }
+
+      async function deleteClip(id) {
+        if (!window.confirm('Supprimer ce clip ?')) return;
+
+        try {
+          const { error } = await db.from('clips').delete().eq('id', id);
+          if (error) throw error;
+          showToast('Clip supprimé');
+          await loadClips();
+        } catch (error) {
+          console.error(error);
+          showToast(`Erreur : ${error.message}`);
+        }
+      }
+
+      function bindEvents() {
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        elements.logoutBtn.addEventListener('click', handleLogout);
+        elements.resetBtn.addEventListener('click', resetForm);
+        elements.clipForm.addEventListener('submit', saveClip);
+        elements.genre.addEventListener('change', () => {
+          elements.customGenreWrap.hidden = elements.genre.value !== 'Autre';
+          renderPreview();
+        });
+        elements.title.addEventListener('input', renderPreview);
+        elements.artist.addEventListener('input', renderPreview);
+        elements.customGenre.addEventListener('input', renderPreview);
+        elements.youtube.addEventListener('input', renderPreview);
+
+        elements.clipList.addEventListener('click', (event) => {
+          const editBtn = event.target.closest('[data-edit]');
+          const deleteBtn = event.target.closest('[data-delete]');
+
+          if (editBtn) {
+            const clip = state.clips.find((item) => item.id === editBtn.dataset.edit);
+            if (clip) fillForm(clip);
+            return;
+          }
+
+          if (deleteBtn) {
+            deleteClip(deleteBtn.dataset.delete);
+          }
+        });
+      }
+
+      async function init() {
+        bindEvents();
+        await syncAuthState();
+        resetForm();
+      }
+
+      init();
+    </script>
+  </body>
+</html>

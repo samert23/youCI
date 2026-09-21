@@ -1,0 +1,21 @@
+const db = window.youciSupabase;
+const state = { filter: 'Tous', favorites: [], clips: [] };
+const elements = {
+  grid: document.querySelector('#videoGrid'), search: document.querySelector('#searchInput'),
+  count: document.querySelector('#count'), chips: [...document.querySelectorAll('.chip')],
+  favCount: document.querySelector('#favCount'), favoritesBtn: document.querySelector('#favoritesBtn'),
+  player: document.querySelector('#player'), modalPlayer: document.querySelector('#playerModal'),
+  toast: document.querySelector('#toast'), playerTitle: document.querySelector('#playerTitle'), playerArtist: document.querySelector('#playerArtist')
+};
+const thumb = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+const spotify = clip => clip.spotify_url || `https://open.spotify.com/search/${encodeURIComponent(`${clip.artist} ${clip.title.replace(/\s*\(.*?\)/g, '')}`)}`;
+const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+function notice(text){elements.toast.textContent=text;elements.toast.classList.add('show');clearTimeout(notice.timer);notice.timer=setTimeout(()=>elements.toast.classList.remove('show'),2800)}
+function filtered(){let query=elements.search.value.trim().toLowerCase();return state.clips.filter(c=>(state.filter==='Tous'||c.genre===state.filter)&&`${c.title} ${c.artist} ${c.genre}`.toLowerCase().includes(query))}
+function card(clip){let saved=state.favorites.includes(clip.id);return `<article class="card"><div class="thumb" data-play="${clip.id}"><img src="${thumb(clip.youtube_id)}" alt="Miniature de ${esc(clip.title)}" loading="lazy"><span class="play"><i>▶</i></span><span class="duration">${esc(clip.duration||'YouTube')}</span></div><div class="card-info"><h3>${esc(clip.title)}</h3><p>${esc(clip.artist)} · ${esc(clip.genre)}</p><a class="spotify" href="${esc(spotify(clip))}" target="_blank" rel="noopener">♫ Écouter sur Spotify</a></div><button class="save ${saved?'saved':''}" data-save="${clip.id}" type="button" aria-label="Favori">${saved?'♥':'♡'}</button></article>`}
+function render(list){let clips=list||filtered();elements.count.textContent=`${clips.length} clip${clips.length!==1?'s':''}`;elements.grid.innerHTML=clips.length?clips.map(card).join(''):'<div class="empty">Aucun clip ne correspond à cette recherche.</div>';elements.favCount.textContent=state.favorites.length}
+async function loadClips(){let {data,error}=await db.from('clips').select('*').order('created_at',{ascending:false});if(error){console.error(error);notice('Catalogue indisponible pour le moment.');return}state.clips=data;render()}
+function openPlayer(id){let clip=state.clips.find(c=>c.id===id);if(!clip)return;elements.playerTitle.textContent=clip.title;elements.playerArtist.textContent=`${clip.artist} · ${clip.genre}`;elements.player.src=`https://www.youtube-nocookie.com/embed/${clip.youtube_id}?autoplay=1&rel=0`;elements.modalPlayer.classList.add('show')}
+function closePlayer(){elements.modalPlayer.classList.remove('show');elements.player.src=''}
+function toggleFavorite(id){state.favorites=state.favorites.includes(id)?state.favorites.filter(x=>x!==id):[...state.favorites,id];localStorage.setItem('youci-favorites',JSON.stringify(state.favorites));render()}
+elements.chips.forEach(chip=>chip.addEventListener('click',()=>{state.filter=chip.dataset.filter;elements.chips.forEach(c=>c.classList.toggle('active',c===chip));render()}));elements.search.addEventListener('input',render);document.querySelector('#searchBtn').addEventListener('click',render);elements.grid.addEventListener('click',event=>{let favorite=event.target.closest('[data-save]'),play=event.target.closest('[data-play]');if(favorite)return toggleFavorite(favorite.dataset.save);if(play)openPlayer(play.dataset.play)});elements.favoritesBtn.addEventListener('click',()=>{state.filter='Tous';elements.search.value='';elements.chips.forEach(c=>c.classList.toggle('active',c.dataset.filter==='Tous'));render(state.clips.filter(c=>state.favorites.includes(c.id)))});document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',closePlayer));state.favorites=JSON.parse(localStorage.getItem('youci-favorites')||'[]');loadClips();

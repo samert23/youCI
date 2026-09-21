@@ -1,0 +1,73 @@
+﻿<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>YouCI — Clips ivoiriens</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">You<b>CI</b><span>CLIPS</span></div>
+      <div class="header-actions">
+        <button class="icon-btn" id="favoritesBtn" type="button" title="Mes favoris">
+          ♡ <span id="favCount">0</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">100% musique ivoirienne</div>
+      <h1>Les clips qui font <em>vibrer</em> la Côte d’Ivoire.</h1>
+      <p>Une sélection simple à regarder, construite autour des vidéos publiées sur YouTube.</p>
+    </section>
+
+    <main class="content">
+      <div class="search-row">
+        <div class="search">
+          <input id="searchInput" type="search" placeholder="Rechercher un artiste ou un titre…" autocomplete="off" />
+          <button id="searchBtn" type="button" aria-label="Rechercher">⌕</button>
+        </div>
+      </div>
+
+      <div class="chips" id="chips">
+        <button class="chip active" data-filter="Tous" type="button">Tous les clips</button>
+        <button class="chip" data-filter="Coupé-décalé" type="button">Coupé-décalé</button>
+        <button class="chip" data-filter="Rap" type="button">Rap ivoire</button>
+        <button class="chip" data-filter="Afropop" type="button">Afropop</button>
+        <button class="chip" data-filter="Gospel" type="button">Gospel</button>
+      </div>
+
+      <div class="section-title">
+        <h2 id="listTitle">À découvrir</h2>
+        <span class="count" id="count"></span>
+      </div>
+
+      <section class="grid" id="videoGrid"></section>
+    </main>
+
+    <div class="modal" id="playerModal" role="dialog" aria-modal="true">
+      <div class="modal-box">
+        <div class="watch">
+          <iframe id="player" title="Lecteur YouTube" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="modal-details">
+          <div>
+            <h2 id="playerTitle"></h2>
+            <p id="playerArtist"></p>
+          </div>
+          <button class="close" type="button" data-close="playerModal">Fermer ✕</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

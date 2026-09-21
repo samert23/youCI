@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c1310">
+<meta name="robots" content="noindex, nofollow">
+<title>YouCI · Administration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c1310;
+  --surface:#131d18;
+  --surface2:#1a2721;
+  --line:rgba(243,236,220,.11);
+  --text:#f3ecdc;
+  --muted:#9fa89f;
+  --orange:#ff8a1f;
+  --green:#22b573;
+  --forest:#0f6b3f;
+  --danger:#ff6b5e;
+  --display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --body:'Figtree',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;min-height:100vh;background:var(--bg);color:var(--text);
+  font:400 15px/1.5 var(--body);
+  padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));
+}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+
+/* Bande pagne : le seul motif décoratif de la page */
+.pagne{
+  height:14px;
+  background:
+    linear-gradient(135deg,var(--orange) 25%,transparent 25%) -7px 0/14px 14px,
+    linear-gradient(225deg,var(--orange) 25%,transparent 25%) -7px 0/14px 14px,
+    linear-gradient(315deg,var(--orange) 25%,transparent 25%) 0 0/14px 14px,
+    linear-gradient(45deg,var(--orange) 25%,transparent 25%) 0 0/14px 14px,
+    var(--forest);
+  border-bottom:3px solid var(--text);
+}
+
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding-inline:clamp(14px,4vw,28px)}
+.top{padding-top:env(safe-area-inset-top,0px)}
+.top-in{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-block:18px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{width:42px;height:42px;flex:none}
+.brand h1{font:800 27px/1 var(--display);letter-spacing:-.02em}
+.brand h1 b{background:linear-gradient(90deg,var(--orange) 0 45%,var(--text) 45% 55%,var(--green) 55%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand small{display:block;margin-top:5px;color:var(--muted);font-size:13px}
+.stats{display:flex;gap:16px;font-size:13px;color:var(--muted);white-space:nowrap}
+.stats strong{display:block;font:800 22px/1 var(--display);color:var(--text)}
+
+/* Onglets (téléphone) */
+.tabs{
+  position:sticky;top:0;z-index:20;display:flex;gap:8px;
+  padding:10px clamp(14px,4vw,28px);
+  background:rgba(12,19,16,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-block:1px solid var(--line);
+}
+.tabs button{
+  flex:1;min-height:46px;border-radius:12px;border:1px solid var(--line);
+  background:var(--surface);font-weight:600;cursor:pointer;
+}
+.tabs button[aria-selected=true]{background:var(--orange);border-color:var(--orange);color:#1c0e00}
+.tabs .n{margin-left:6px;opacity:.75;font-weight:500}
+
+.layout{padding-top:18px}
+.layout .panel{display:none}
+.layout[data-tab=form] #panel-form,
+.layout[data-tab=list] #panel-list{display:block}
+
+/* Formulaire */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px}
+.card.editing{border-color:rgba(255,138,31,.6);box-shadow:0 0 0 3px rgba(255,138,31,.14)}
+.card h2{font:800 22px/1.2 var(--display);letter-spacing:-.01em;margin-bottom:16px}
+.field{margin-bottom:16px}
+label,.label{display:block;font-weight:600;font-size:14px;margin-bottom:7px}
+.opt{color:var(--muted);font-weight:500;font-size:13px;margin-left:6px}
+.input{
+  display:block;width:100%;min-height:48px;padding:12px 14px;border-radius:12px;
+  border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:16px;
+}
+.input::placeholder{color:#79837b}
+.input.bad{border-color:var(--danger)}
+.err{color:var(--danger);font-size:13px;margin-top:6px}
+.err:empty{display:none}
+.hint{color:var(--muted);font-size:13px;margin-top:6px}
+
+.gchips{display:flex;flex-wrap:wrap;gap:8px}
+.gchip{
+  min-height:42px;padding:0 15px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface2);font-weight:600;font-size:14px;cursor:pointer;
+}
+.gchip[aria-checked=true]{background:var(--orange);border-color:var(--orange);color:#1c0e00}
+#genreCustom{margin-top:10px}
+
+.ratio{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)}
+.ratio iframe,.ratio img{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}
+.ph{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:8px;text-align:center;padding:16px;color:var(--muted);font-size:13.5px;background:repeating-linear-gradient(135deg,transparent 0 12px,rgba(243,236,220,.03) 12px 24px),var(--surface2)}
+.ph svg{opacity:.6}
+.thumbrow{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:13px;color:var(--muted)}
+.thumbrow .th{width:96px;flex:none;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000;border:1px solid var(--line)}
+.thumbrow img{display:block;width:100%;height:100%;object-fit:cover}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.btn{
+  min-height:46px;padding:0 18px;border-radius:12px;border:1px solid var(--line);
+  background:var(--surface2);font-weight:600;font-size:15px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;
+}
+.btn.primary{background:var(--orange);border-color:var(--orange);color:#1c0e00;flex:1 1 220px}
+.btn.spotify{background:#1db954;border-color:#1db954;color:#04150a}
+.btn.small{min-height:42px;padding:0 12px;font-size:14px}
+.btn.danger{color:var(--danger);border-color:rgba(255,107,94,.35);background:transparent}
+.btn.danger-solid{background:var(--danger);border-color:var(--danger);color:#2a0805}
+.btn.ghost{background:transparent}
+@media(hover:hover){
+  .btn:hover,.gchip:hover,.chip:hover{border-color:rgba(243,236,220,.3)}
+  .btn.primary:hover{filter:brightness(1.06)}
+}
+
+/* Catalogue */
+.listhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+.listhead h2{font:800 22px/1.2 var(--display);letter-spacing:-.01em}
+.count{color:var(--muted);font-size:13.5px}
+.search{position:relative;margin-bottom:12px}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search .input{padding-left:44px;border-radius:14px}
+.fchips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;margin-bottom:8px;scrollbar-width:none}
+.fchips::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);font-weight:600;font-size:14px;cursor:pointer;
+}
+.chip span{opacity:.65;margin-left:7px;font-weight:500}
+.chip[aria-pressed=true]{background:var(--orange);border-color:var(--orange);color:#1c0e00}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.clip{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.media{position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,#2b1600,#06231a)}
+.media img,.media iframe{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}
+.play{
+  position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;cursor:pointer;
+  display:grid;place-items:center;
+  background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.6));
+}
+.play span{width:56px;height:56px;border-radius:50%;background:var(--orange);display:grid;place-items:center;color:#1c0e00;box-shadow:0 6px 22px rgba(255,138,31,.45)}
+.dur{position:absolute;right:8px;bottom:8px;pointer-events:none;background:rgba(0,0,0,.78);color:#fff;font-size:12px;font-weight:600;padding:2px 7px;border-radius:6px}
+.info{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.meta{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:2px}
+.gsel{
+  -webkit-appearance:none;appearance:none;cursor:pointer;max-width:100%;
+  min-height:36px;padding:6px 30px 6px 13px;border-radius:999px;
+  border:1px solid hsl(var(--h) 75% 60%/.4);
+  background:hsl(var(--h) 75% 55%/.16) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23cfc9bb' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+  color:hsl(var(--h) 90% 78%);font-weight:700;font-size:13px;
+}
+.gsel option{background:#1a2721;color:#f3ecdc}
+.sp{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.sp::before{content:"";width:7px;height:7px;border-radius:50%;background:#59635b}
+.sp.ok::before{background:var(--green)}
+.clip h3{font:600 17px/1.3 var(--display);overflow-wrap:anywhere}
+.artist{color:var(--muted);font-size:14.5px;overflow-wrap:anywhere}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto;padding-top:10px}
+.btns .spotify{grid-column:1/-1}
+
+.empty{text-align:center;padding:44px 20px;border:1px dashed rgba(243,236,220,.2);border-radius:18px}
+.empty h3{font:800 20px/1.2 var(--display);margin-bottom:6px}
+.empty p{color:var(--muted);margin-bottom:16px}
+
+.tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+.tools p{max-width:46ch}
+.tools div{display:flex;gap:8px}
+
+.dlg{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:18px;padding:20px;width:min(92vw,380px)}
+.dlg::backdrop{background:rgba(0,0,0,.68)}
+.dlg h3{font:800 20px/1.2 var(--display);margin-bottom:8px}
+.dlg p{color:var(--muted);margin-bottom:18px;overflow-wrap:anywhere}
+.dlg .row{display:flex;gap:10px}
+.dlg .btn{flex:1}
+
+.toast{
+  position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:50;
+  transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  max-width:min(92vw,420px);padding:12px 18px;border-radius:12px;
+  background:var(--text);color:#141a16;font-weight:600;font-size:14.5px;text-align:center;
+  transition:opacity .2s,transform .2s;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.error{background:var(--danger);color:#2a0805}
+
+@media(min-width:900px){
+  .tabs{display:none}
+  .layout{display:grid;grid-template-columns:minmax(360px,420px) 1fr;gap:26px;align-items:start;padding-top:24px}
+  .layout .panel{display:block!important}
+  #panel-form{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="pagne" aria-hidden="true"></div>
+  <div class="wrap top-in">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffa03c"/><stop offset="1" stop-color="#e86a00"/></linearGradient></defs>
+        <rect width="40" height="40" rx="12" fill="url(#lg)"/>
+        <path d="M15 12.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72l-12.5-7.5A1 1 0 0 0 15 12.5z" fill="#fff"/>
+        <circle cx="32" cy="32" r="5" fill="#22b573" stroke="#0c1310" stroke-width="2"/>
+      </svg>
+      <div>
+        <h1>You<b>CI</b></h1>
+        <small>Administration des clips</small>
+      </div>
+    </div>
+    <div class="stats" id="stats" aria-live="polite"></div>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button type="button" role="tab" data-tab="form" aria-selected="true">Ajouter un clip</button>
+  <button type="button" role="tab" data-tab="list" aria-selected="false">Catalogue<span class="n" id="tabCount">0</span></button>
+</nav>
+
+<main class="wrap layout" id="layout" data-tab="form">
+
+  <!-- FORMULAIRE -->
+  <section class="panel" id="panel-form" aria-labelledby="formTitle">
+    <div class="card" id="formCard">
+      <h2 id="formTitle">Ajouter un clip</h2>
+      <form id="clipForm" novalidate autocomplete="off">
+
+        <div class="field">
+          <label for="title">Titre du clip</label>
+          <input class="input" id="title" type="text" maxlength="120" placeholder="Ex : Moussa Mouna" autocomplete="off">
+          <p class="err" id="err-title" role="alert"></p>
+        </div>
+
+        <div class="field">
+          <label for="artist">Nom de l’artiste</label>
+          <input class="input" id="artist" type="text" maxlength="80" list="artistList" placeholder="Ex : Didi B" autocomplete="off">
+          <datalist id="artistList"></datalist>
+          <p class="err" id="err-artist" role="alert"></p>
+        </div>
+
+        <div class="field">
+          <span class="label" id="genreLabel">Genre</span>
+          <div class="gchips" id="genreChips" role="radiogroup" aria-labelledby="genreLabel"></div>
+          <input class="input" id="genreCustom" type="text" maxlength="30" placeholder="Écris le genre (ex : Ndombolo, Reggae)" hidden aria-label="Autre genre">
+          <p class="err" id="err-genre" role="alert"></p>
+        </div>
+
+        <div class="field">
+          <label for="yt">Lien YouTube</label>
+          <input class="input" id="yt" type="text" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://www.youtube.com/watch?v=…">
+          <p class="err" id="err-yt" role="alert"></p>
+          <div style="margin-top:10px">
+            <div class="ratio" id="previewBox">
+              <div class="ph">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z"/></svg>
+                <span>Colle un lien YouTube : le clip apparaît ici avant l’enregistrement.</span>
+              </div>
+            </div>
+            <div class="thumbrow" id="thumbRow" hidden>
+              <div class="th"><img id="thumbImg" alt=""></div>
+              <span>Miniature utilisée sur YouCI</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="sp">Lien Spotify<span class="opt">facultatif</span></label>
+          <input class="input" id="sp" type="text" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://open.spotify.com/track/…">
+          <p class="hint">Sans lien, le bouton « Écouter sur Spotify » lance une recherche avec l’artiste et le titre.</p>
+          <p class="err" id="err-sp" role="alert"></p>
+        </div>
+
+        <div class="field">
+          <label for="duration">Durée<span class="opt">facultatif</span></label>
+          <input class="input" id="duration" type="text" maxlength="8" placeholder="3:45" autocomplete="off">
+          <p class="err" id="err-duration" role="alert"></p>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn primary" id="submitBtn">Ajouter le clip</button>
+          <button type="button" class="btn ghost" id="cancelBtn" hidden>Annuler</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- CATALOGUE -->
+  <section class="panel" id="panel-list" aria-labelledby="listTitle">
+    <div class="listhead">
+      <h2 id="listTitle">Catalogue</h2>
+      <span class="count" id="resultCount" aria-live="polite"></span>
+    </div>
+
+    <div class="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input class="input" id="search" type="search" placeholder="Rechercher un artiste, un titre ou un genre" autocomplete="off" aria-label="Rechercher un clip">
+    </div>
+    <div class="fchips" id="filterChips" role="group" aria-label="Filtrer par genre"></div>
+
+    <div class="grid" id="list"></div>
+
+    <div class="empty" id="empty" hidden>
+      <h3 id="emptyTitle"></h3>
+      <p id="emptyText"></p>
+      <button type="button" class="btn primary" id="emptyBtn" style="flex:none"></button>
+    </div>
+
+    <div class="tools">
+      <p>Les clips sont enregistrés dans ce navigateur uniquement. Exporte une sauvegarde de temps en temps.</p>
+      <div>
+        <button type="button" class="btn ghost small" id="exportBtn">Exporter</button>
+        <button type="button" class="btn ghost small" id="importBtn">Importer</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog class="dlg" id="dlg" aria-labelledby="dlgTitle">
+  <h3 id="dlgTitle">Supprimer ce clip ?</h3>
+  <p id="dlgText"></p>
+  <div class="row">
+    <button type="button" class="btn ghost" id="dlgNo">Annuler</button>
+    <button type="button" class="btn danger-solid" id="dlgYes">Supprimer</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Constantes ---------- */
+const KEY = 'youci_clips_v1';
+const PRESETS = ['Rap ivoire','Coupé-décalé','Afropop','Gospel','Zouglou'];
+const OTHER = '__autre__';
+const HUES = Object.assign(Object.create(null), {rapivoire:28, coupedecale:150, afropop:320, gospel:48, zouglou:195});
+
+/* ---------- Raccourcis ---------- */
+const $ = id => document.getElementById(id);
+const els = {
+  layout:$('layout'), form:$('clipForm'), card:$('formCard'), formTitle:$('formTitle'),
+  title:$('title'), artist:$('artist'), genreChips:$('genreChips'), genreCustom:$('genreCustom'),
+  yt:$('yt'), sp:$('sp'), duration:$('duration'),
+  submit:$('submitBtn'), cancel:$('cancelBtn'),
+  previewBox:$('previewBox'), thumbRow:$('thumbRow'), thumbImg:$('thumbImg'),
+  search:$('search'), filterChips:$('filterChips'), list:$('list'),
+  empty:$('empty'), emptyTitle:$('emptyTitle'), emptyText:$('emptyText'), emptyBtn:$('emptyBtn'),
+  count:$('resultCount'), stats:$('stats'), tabCount:$('tabCount'), artistList:$('artistList'),
+  dlg:$('dlg'), dlgText:$('dlgText'), importFile:$('importFile'), toast:$('toast')
+};
+
+/* ---------- Utilitaires ---------- */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const key  = s => norm(s).replace(/[^a-z0-9]/g,'');
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const thumb = id => 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg';
+const plural = (n, one, many) => n + ' ' + (n > 1 ? many : one);
+const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const scrollTop = () => window.scrollTo({top:0, behavior: reduceMotion() ? 'auto' : 'smooth'});
+
+function hue(g){
+  const k = key(g);
+  if (HUES[k] !== undefined) return HUES[k];
+  let h = 7; for (const ch of g) h = (h*33 + ch.charCodeAt(0)) % 360;
+  return h;
+}
+
+let toastTimer;
+function toast(msg, type){
+  els.toast.textContent = msg;
+  els.toast.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => els.toast.classList.remove('show'), 2600);
+}
+
+/* ---------- Lecture des liens ---------- */
+function parseYouTubeId(input){
+  const s = (input||'').trim();
+  if (!s) return null;
+  let u;
+  try { u = new URL(/^https?:\/\//i.test(s) ? s : 'https://' + s); } catch { return null; }
+  const host = u.hostname.toLowerCase().replace(/^(www|m)\./,'');
+  let id = null;
+  if (host === 'youtu.be') {
+    id = u.pathname.slice(1).split('/')[0];
+  } else if (host === 'youtube.com' || host === 'music.youtube.com' || host === 'youtube-nocookie.com') {
+    if (u.pathname === '/watch') id = u.searchParams.get('v');
+    else { const m = u.pathname.match(/^\/(embed|shorts|live|v)\/([\w-]{11})/); if (m) id = m[2]; }
+  }
+  return id && /^[\w-]{11}$/.test(id) ? id : null;
+}
+
+function normalizeSpotify(raw){
+  const s = (raw||'').trim();
+  if (!s) return {ok:true, url:''};
+  if (/^spotify:(track|album|artist|playlist|episode|show):[A-Za-z0-9]+$/.test(s)) return {ok:true, url:s};
+  const full = /^https?:\/\//i.test(s) ? s : 'https://' + s;
+  let u;
+  try { u = new URL(full); } catch { return {ok:false}; }
+  const h = u.hostname.toLowerCase();
+  const ok = h === 'spotify.link' || h === 'spotify.com' || h.endsWith('.spotify.com');
+  return ok ? {ok:true, url:full} : {ok:false};
+}
+
+function normalizeDuration(raw){
+  const s = (raw||'').trim().replace(/\./g,':');
+  if (!s) return {ok:true, value:''};
+  let m = s.match(/^(\d{1,2}):([0-5]\d)$/);
+  if (m) return {ok:true, value: (+m[1]) + ':' + m[2]};
+  m = s.match(/^(\d{1,2}):([0-5]\d):([0-5]\d)$/);
+  if (m) return {ok:true, value: (+m[1]) + ':' + m[2] + ':' + m[3]};
+  return {ok:false};
+}
+
+function spotifyHref(c){
+  return c.spotify || 'https://open.spotify.com/search/' + encodeURIComponent(c.artist + ' ' + c.title);
+}
+
+/* ---------- Stockage ---------- */
+function load(){
+  try {
+    const raw = localStorage.getItem(KEY);
+    const a = raw ? JSON.parse(raw) : [];
+    return Array.isArray(a) ? a : [];
+  } catch { return []; }
+}
+let clips = load();
+
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(clips)); return true; }
+  catch { toast('Enregistrement impossible : le stockage du navigateur est plein ou désactivé.', 'error'); return false; }
+}
+
+/* ---------- État ---------- */
+let editingId = null;
+let selectedGenre = '';
+let filterGenre = '';
+let query = '';
+let shownId = null;
+let pendingDelete = null;
+
+function canonGenre(g){
+  const k = key(g);
+  const p = PRESETS.find(x => key(x) === k);
+  if (p) return p;
+  const ex = clips.map(c => c.genre).find(x => key(x) === k);
+  return ex || g;
+}
+
+/* ---------- Onglets ---------- */
+function showTab(t){
+  els.layout.dataset.tab = t;
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+}
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+/* ---------- Erreurs de formulaire ---------- */
+function setErr(name, msg){
+  $('err-' + name).textContent = msg || '';
+  const input = name === 'genre' ? els.genreCustom : els[name];
+  if (input){ input.classList.toggle('bad', !!msg); input.setAttribute('aria-invalid', msg ? 'true' : 'false'); }
+}
+const FIELDS = ['title','artist','genre','yt','sp','duration'];
+['title','artist','sp','duration'].forEach(n => els[n].addEventListener('input', () => setErr(n,'')));
+
+/* ---------- Genre (formulaire) ---------- */
+function renderGenreChips(){
+  els.genreChips.innerHTML = PRESETS.concat(OTHER).map(g => {
+    const label = g === OTHER ? 'Autre…' : g;
+    return '<button type="button" class="gchip" role="radio" aria-checked="' + (selectedGenre === g) + '" data-g="' + esc(g) + '">' + esc(label) + '</button>';
+  }).join('');
+  els.genreCustom.hidden = selectedGenre !== OTHER;
+}
+els.genreChips.addEventListener('click', e => {
+  const b = e.target.closest('.gchip'); if (!b) return;
+  selectedGenre = b.dataset.g;
+  setErr('genre','');
+  renderGenreChips();
+  if (selectedGenre === OTHER) els.genreCustom.focus();
+});
+els.genreCustom.addEventListener('input', () => setErr('genre',''));
+
+function setGenreFromValue(g){
+  if (PRESETS.includes(g)) { selectedGenre = g; els.genreCustom.value = ''; }
+  else { selectedGenre = OTHER; els.genreCustom.value = g; }
+  renderGenreChips();
+}
+
+/* ---------- Aperçu YouTube ---------- */
+function showPreview(id){
+  if (id === shownId) return;
+  shownId = id;
+  if (!id){
+    els.previewBox.innerHTML = '<div class="ph"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z"/></svg><span>Colle un lien YouTube : le clip apparaît ici avant l’enregistrement.</span></div>';
+    els.thumbRow.hidden = true;
+    return;
+  }
+  els.previewBox.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + id + '?rel=0&playsinline=1" title="Aperçu du clip YouTube" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+  els.thumbImg.src = thumb(id);
+  els.thumbRow.hidden = false;
+}
+function updatePreview(){
+  const v = els.yt.value.trim();
+  if (!v){ setErr('yt',''); showPreview(null); return; }
+  const id = parseYouTubeId(v);
+  if (!id){
+    setErr('yt','Lien YouTube non reconnu. Colle le lien d’une vidéo (youtube.com/watch?v=… ou youtu.be/…).');
+    showPreview(null); return;
+  }
+  setErr('yt',''); showPreview(id);
+}
+let previewTimer;
+els.yt.addEventListener('input', () => { clearTimeout(previewTimer); previewTimer = setTimeout(updatePreview, 180); });
+els.yt.addEventListener('blur', updatePreview);
+
+/* ---------- Formulaire : réinitialiser / modifier ---------- */
+function resetForm(){
+  editingId = null;
+  els.form.reset();
+  selectedGenre = '';
+  renderGenreChips();
+  FIELDS.forEach(n => setErr(n,''));
+  showPreview(null);
+  els.formTitle.textContent = 'Ajouter un clip';
+  els.submit.textContent = 'Ajouter le clip';
+  els.cancel.hidden = true;
+  els.card.classList.remove('editing');
+}
+
+function startEdit(id, focusGenre){
+  const c = clips.find(x => x.id === id); if (!c) return;
+  editingId = id;
+  els.title.value = c.title;
+  els.artist.value = c.artist;
+  els.yt.value = c.ytUrl || ('https://www.youtube.com/watch?v=' + c.ytId);
+  els.sp.value = c.spotify || '';
+  els.duration.value = c.duration || '';
+  FIELDS.forEach(n => setErr(n,''));
+  setGenreFromValue(c.genre);
+  showPreview(c.ytId);
+  els.formTitle.textContent = 'Modifier le clip';
+  els.submit.textContent = 'Enregistrer les modifications';
+  els.cancel.hidden = false;
+  els.card.classList.add('editing');
+  showTab('form');
+  scrollTop();
+  if (focusGenre){
+    selectedGenre = OTHER; els.genreCustom.value = '';
+    renderGenreChips(); els.genreCustom.focus();
+  }
+}
+els.cancel.addEventListener('click', () => { resetForm(); showTab('list'); });
+
+/* ---------- Enregistrer ---------- */
+els.form.addEventListener('submit', e => {
+  e.preventDefault();
+  FIELDS.forEach(n => setErr(n,''));
+
+  const title  = els.title.value.replace(/\s+/g,' ').trim();
+  const artist = els.artist.value.replace(/\s+/g,' ').trim();
+  let genre    = selectedGenre === OTHER ? els.genreCustom.value.replace(/\s+/g,' ').trim() : selectedGenre;
+  const ytRaw  = els.yt.value.trim();
+  const ytId   = parseYouTubeId(ytRaw);
+  const sp     = normalizeSpotify(els.sp.value);
+  const dur    = normalizeDuration(els.duration.value);
+
+  const errs = [];
+  if (!title)  errs.push(['title','Le titre est obligatoire.', els.title]);
+  if (!artist) errs.push(['artist','Le nom de l’artiste est obligatoire.', els.artist]);
+  if (!selectedGenre) errs.push(['genre','Choisis un genre.', els.genreChips.querySelector('button')]);
+  else if (!genre)    errs.push(['genre','Écris le genre.', els.genreCustom]);
+  if (!ytRaw) errs.push(['yt','Le lien YouTube est obligatoire.', els.yt]);
+  else if (!ytId) errs.push(['yt','Lien YouTube non reconnu. Colle le lien d’une vidéo (youtube.com/watch?v=… ou youtu.be/…).', els.yt]);
+  else {
+    const dup = clips.find(c => c.ytId === ytId && c.id !== editingId);
+    if (dup) errs.push(['yt','Ce clip existe déjà : « ' + dup.title + ' », ' + dup.artist + '.', els.yt]);
+  }
+  if (!sp.ok)  errs.push(['sp','Lien Spotify non reconnu. Colle un lien open.spotify.com ou laisse vide.', els.sp]);
+  if (!dur.ok) errs.push(['duration','Format attendu : 3:45 (minutes:secondes).', els.duration]);
+
+  if (errs.length){
+    errs.forEach(x => setErr(x[0], x[1]));
+    errs[0][2].focus();
+    return;
+  }
+
+  genre = canonGenre(genre);
+  const prev = JSON.stringify(clips);
+  const wasEditing = !!editingId;
+  const data = {title, artist, genre, ytId, ytUrl: ytRaw, spotify: sp.url, duration: dur.value};
+
+  if (wasEditing){
+    const c = clips.find(x => x.id === editingId);
+    Object.assign(c, data);
+  } else {
+    clips.push(Object.assign({id: uid(), createdAt: Date.now()}, data));
+  }
+  if (!save()){ clips = JSON.parse(prev); return; }
+
+  resetForm();
+  renderAll();
+  if (wasEditing){ showTab('list'); toast('Clip modifié'); }
+  else toast('Clip ajouté : « ' + title + ' »');
+});
+
+/* ---------- Catalogue : rendu ---------- */
+function usedGenres(){
+  const used = Array.from(new Set(clips.map(c => c.genre)));
+  const custom = used.filter(g => !PRESETS.includes(g)).sort((a,b) => a.localeCompare(b,'fr'));
+  return PRESETS.filter(g => used.includes(g)).concat(custom);
+}
+function allGenreChoices(){
+  const custom = usedGenres().filter(g => !PRESETS.includes(g));
+  return PRESETS.concat(custom);
+}
+
+function renderStats(){
+  const artists = new Set(clips.map(c => key(c.artist))).size;
+  els.stats.innerHTML =
+    '<div><strong>' + clips.length + '</strong>' + (clips.length > 1 ? 'clips' : 'clip') + '</div>' +
+    '<div><strong>' + artists + '</strong>' + (artists > 1 ? 'artistes' : 'artiste') + '</div>';
+  els.tabCount.textContent = clips.length;
+}
+
+function renderArtists(){
+  const names = Array.from(new Set(clips.map(c => c.artist))).sort((a,b) => a.localeCompare(b,'fr'));
+  els.artistList.innerHTML = names.map(n => '<option value="' + esc(n) + '"></option>').join('');
+}
+
+function renderFilters(){
+  const genres = usedGenres();
+  if (filterGenre && !genres.includes(filterGenre)) filterGenre = '';
+  if (!clips.length){ els.filterChips.innerHTML = ''; els.filterChips.hidden = true; return; }
+  els.filterChips.hidden = false;
+  const count = g => clips.filter(c => c.genre === g).length;
+  let html = '<button type="button" class="chip" data-g="" aria-pressed="' + (filterGenre === '') + '">Tous<span>' + clips.length + '</span></button>';
+  html += genres.map(g => '<button type="button" class="chip" data-g="' + esc(g) + '" aria-pressed="' + (filterGenre === g) + '">' + esc(g) + '<span>' + count(g) + '</span></button>').join('');
+  els.filterChips.innerHTML = html;
+}
+
+function visibleClips(){
+  const q = norm(query);
+  return clips
+    .filter(c => (!filterGenre || c.genre === filterGenre) && (!q || norm(c.title + ' ' + c.artist + ' ' + c.genre).includes(q)))
+    .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+}
+
+function cardHTML(c, choices){
+  const h = hue(c.genre);
+  const href = spotifyHref(c);
+  const direct = !!c.spotify;
+  const opts = choices.map(g => '<option value="' + esc(g) + '"' + (g === c.genre ? ' selected' : '') + '>' + esc(g) + '</option>').join('')
+             + '<option value="' + OTHER + '">Autre genre…</option>';
+  return '<article class="clip" data-id="' + c.id + '">' +
+    '<div class="media" data-yt="' + c.ytId + '">' +
+      '<img src="' + thumb(c.ytId) + '" alt="" loading="lazy" decoding="async">' +
+      '<button type="button" class="play" data-action="play" aria-label="Lire le clip « ' + esc(c.title) + ' »"><span><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></span></button>' +
+      (c.duration ? '<span class="dur">' + esc(c.duration) + '</span>' : '') +
+    '</div>' +
+    '<div class="info">' +
+      '<div class="meta">' +
+        '<select class="gsel" style="--h:' + h + '" aria-label="Changer le genre de « ' + esc(c.title) + ' »">' + opts + '</select>' +
+        '<span class="sp' + (direct ? ' ok' : '') + '">' + (direct ? 'Lien Spotify direct' : 'Recherche Spotify') + '</span>' +
+      '</div>' +
+      '<h3>' + esc(c.title) + '</h3>' +
+      '<p class="artist">' + esc(c.artist) + '</p>' +
+      '<div class="btns">' +
+        '<a class="btn spotify" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.6 14.4a.62.62 0 0 1-.86.2c-2.35-1.44-5.3-1.76-8.78-.97a.62.62 0 1 1-.28-1.21c3.8-.87 7.07-.5 9.72 1.12.3.18.39.57.2.86zm1.23-2.73a.78.78 0 0 1-1.07.26c-2.69-1.65-6.79-2.13-9.97-1.16a.78.78 0 0 1-.45-1.5c3.63-1.1 8.15-.57 11.23 1.33.37.22.48.7.26 1.07zm.1-2.84C14.7 8.9 9.4 8.73 6.33 9.66a.93.93 0 1 1-.54-1.78c3.53-1.07 9.4-.86 13.1 1.34a.93.93 0 0 1-.96 1.6z"/></svg>' +
+          'Écouter sur Spotify</a>' +
+        '<button type="button" class="btn small" data-action="edit">Modifier</button>' +
+        '<button type="button" class="btn small danger" data-action="delete">Supprimer</button>' +
+      '</div>' +
+    '</div>' +
+  '</article>';
+}
+
+function renderList(){
+  const items = visibleClips();
+  const choices = allGenreChoices();
+  els.list.innerHTML = items.map(c => cardHTML(c, choices)).join('');
+  els.count.textContent = (query || filterGenre)
+    ? items.length + ' sur ' + plural(clips.length, 'clip', 'clips')
+    : plural(clips.length, 'clip', 'clips');
+
+  const none = items.length === 0;
+  els.empty.hidden = !none;
+  els.list.hidden = none;
+  if (none){
+    if (!clips.length){
+      els.emptyTitle.textContent = 'Aucun clip pour l’instant';
+      els.emptyText.textContent = 'Ajoute ton premier clip avec le formulaire.';
+      els.emptyBtn.textContent = 'Ajouter un clip';
+      els.emptyBtn.dataset.mode = 'add';
+    } else {
+      els.emptyTitle.textContent = 'Aucun résultat';
+      els.emptyText.textContent = 'Essaie un autre nom d’artiste ou retire le filtre.';
+      els.emptyBtn.textContent = 'Effacer la recherche';
+      els.emptyBtn.dataset.mode = 'clear';
+    }
+  }
+}
+
+function renderAll(){ renderStats(); renderArtists(); renderFilters(); renderList(); }
+
+/* ---------- Catalogue : interactions ---------- */
+els.search.addEventListener('input', () => { query = els.search.value; renderList(); });
+
+els.filterChips.addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  filterGenre = b.dataset.g;
+  renderFilters(); renderList();
+});
+
+els.emptyBtn.addEventListener('click', () => {
+  if (els.emptyBtn.dataset.mode === 'add'){ showTab('form'); els.title.focus(); }
+  else { query = ''; filterGenre = ''; els.search.value = ''; renderFilters(); renderList(); }
+});
+
+els.list.addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]'); if (!btn) return;
+  const card = btn.closest('.clip'); if (!card) return;
+  const id = card.dataset.id;
+  const action = btn.dataset.action;
+  if (action === 'play'){
+    const media = card.querySelector('.media');
+    media.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + media.dataset.yt + '?autoplay=1&rel=0&playsinline=1" title="Lecteur YouTube" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+  } else if (action === 'edit'){
+    startEdit(id, false);
+  } else if (action === 'delete'){
+    askDelete(id);
+  }
+});
+
+/* Changement rapide du genre depuis la carte */
+els.list.addEventListener('change', e => {
+  const sel = e.target.closest('.gsel'); if (!sel) return;
+  const id = sel.closest('.clip').dataset.id;
+  const c = clips.find(x => x.id === id); if (!c) return;
+  if (sel.value === OTHER){ sel.value = c.genre; startEdit(id, true); return; }
+  const prev = JSON.stringify(clips);
+  c.genre = sel.value;
+  if (!save()){ clips = JSON.parse(prev); renderList(); return; }
+  if (editingId === id) setGenreFromValue(c.genre);
+  renderAll();
+  toast('Genre modifié : ' + c.genre);
+});
+
+/* Miniature indisponible : on garde le fond dégradé */
+els.list.addEventListener('error', e => { if (e.target.tagName === 'IMG') e.target.remove(); }, true);
+els.thumbImg.addEventListener('error', () => { els.thumbRow.hidden = true; });
+
+/* ---------- Suppression ---------- */
+function askDelete(id){
+  const c = clips.find(x => x.id === id); if (!c) return;
+  pendingDelete = id;
+  els.dlgText.textContent = '« ' + c.title + ' » de ' + c.artist + ' sera retiré du catalogue.';
+  if (typeof els.dlg.showModal === 'function') els.dlg.showModal();
+  else if (window.confirm('Supprimer « ' + c.title + ' » ?')) doDelete();
+}
+function doDelete(){
+  const id = pendingDelete; pendingDelete = null;
+  if (!id) return;
+  const prev = JSON.stringify(clips);
+  clips = clips.filter(c => c.id !== id);
+  if (!save()){ clips = JSON.parse(prev); return; }
+  if (editingId === id) resetForm();
+  renderAll();
+  toast('Clip supprimé');
+}
+$('dlgNo').addEventListener('click', () => { pendingDelete = null; els.dlg.close(); });
+$('dlgYes').addEventListener('click', () => { doDelete(); els.dlg.close(); });
+els.dlg.addEventListener('close', () => { pendingDelete = null; });
+
+/* ---------- Sauvegarde : export / import ---------- */
+$('exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(clips, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'youci-clips-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('Sauvegarde exportée');
+});
+$('importBtn').addEventListener('click', () => els.importFile.click());
+els.importFile.addEventListener('change', () => {
+  const file = els.importFile.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      const arr = Array.isArray(data) ? data : (data && data.clips);
+      if (!Array.isArray(arr)) throw new Error('format');
+      const prev = JSON.stringify(clips);
+      let added = 0, skipped = 0;
+      arr.forEach(it => {
+        if (!it || typeof it !== 'object') { skipped++; return; }
+        const title = String(it.title || '').trim().slice(0,120);
+        const artist = String(it.artist || '').trim().slice(0,80);
+        let id = parseYouTubeId(String(it.ytUrl || ''));
+        if (!id && /^[\w-]{11}$/.test(String(it.ytId || ''))) id = String(it.ytId);
+        if (!title || !artist || !id || clips.some(c => c.ytId === id)) { skipped++; return; }
+        const sp = normalizeSpotify(String(it.spotify || ''));
+        const dur = normalizeDuration(String(it.duration || ''));
+        const genre = canonGenre(String(it.genre || '').trim().slice(0,30) || 'Autre');
+        clips.push({
+          id: uid(), title, artist, genre, ytId: id,
+          ytUrl: 'https://www.youtube.com/watch?v=' + id,
+          spotify: sp.ok ? sp.url : '', duration: dur.ok ? dur.value : '',
+          createdAt: Number(it.createdAt) || Date.now()
+        });
+        added++;
+      });
+      if (added && !save()){ clips = JSON.parse(prev); }
+      else {
+        renderAll();
+        toast(plural(added, 'clip importé', 'clips importés') + (skipped ? ', ' + skipped + ' ignoré' + (skipped > 1 ? 's' : '') : ''));
+      }
+    } catch { toast('Fichier invalide : import impossible.', 'error'); }
+    els.importFile.value = '';
+  };
+  reader.readAsText(file);
+});
+
+/* ---------- Démarrage ---------- */
+renderGenreChips();
+renderAll();
+})();
+</script>
+</body>
+</html>
