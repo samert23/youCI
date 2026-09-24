@@ -344,6 +344,8 @@ label,.label{display:block;font-weight:600;font-size:14px;margin-bottom:7px}
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
 <script>
 (function(){
 'use strict';
@@ -444,7 +446,37 @@ function load(){
     return Array.isArray(a) ? a : [];
   } catch { return []; }
 }
-let clips = load();
+const db = window.youciSupabase;
+let clips = [];
+
+async function loadClips(){
+  if (!db || !db.from){
+    clips = load();
+    renderAll();
+    return;
+  }
+
+  const {data, error} = await db.from('clips').select('*').order('created_at', {ascending:false});
+  if (error){
+    console.error(error);
+    clips = load();
+    toast('Catalogue distant indisponible : affichage local.', 'error');
+  } else {
+    clips = (data || []).map(c => ({
+      id: c.id,
+      title: c.title,
+      artist: c.artist,
+      genre: c.genre,
+      ytId: c.youtube_id,
+      ytUrl: 'https://www.youtube.com/watch?v=' + c.youtube_id,
+      spotify: c.spotify_url || '',
+      duration: c.duration || '',
+      createdAt: c.created_at ? Date.parse(c.created_at) : Date.now()
+    }));
+    try { localStorage.setItem(KEY, JSON.stringify(clips)); } catch {}
+  }
+  renderAll();
+}
 
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify(clips)); return true; }
@@ -844,7 +876,7 @@ els.importFile.addEventListener('change', () => {
 
 /* ---------- Démarrage ---------- */
 renderGenreChips();
-renderAll();
+loadClips();
 })();
 </script>
 </body>
